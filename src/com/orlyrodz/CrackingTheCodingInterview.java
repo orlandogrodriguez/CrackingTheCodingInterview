@@ -517,6 +517,378 @@ public class CrackingTheCodingInterview {
         return length;
     }
 
+    /**
+     * Problem 2.8 - Loop Detection
+     *
+     * Given a circular linked list, implement an algorithm that returns the
+     * node at the beginning of the loop.
+     * @param head
+     * @return
+     */
+    public ListNode detectCycle(ListNode head) {
+        // Edge cases
+        if (head == null) return null;
+        if (head.next == null) return null;
+        if (head.next == head) return head;
+        if (head.next.next != null && head.next.next == head) return head;
+
+        // Check existence of loop
+        ListNode curNode = head;
+        ListNode runner = hasLoop(head);
+        if (runner == null) return null;
+        while (runner != curNode) {
+            curNode = curNode.next;
+            runner = runner.next;
+        }
+        return curNode;
+    }
+
+    /**
+     * This is a helper method for detectCycle(). It returns the node where a
+     * loop was detected. Note: This is not where the loop starts, but rather
+     * where in the iteration process was a presence of a loop determined.
+     * @param head The start of the list.
+     * @return Node where a loop was detected or null if no loop was detected.
+     */
+    public ListNode hasLoop(ListNode head) {
+        ListNode curNode = head.next;
+        ListNode runner = head.next.next;
+        while (runner != null) {
+            if (curNode == runner)
+                break;
+            if (runner.next == null || runner.next.next == null)
+                return null;
+            curNode = curNode.next;
+            runner = runner.next.next;
+        }
+        return runner;
+    }
+
+    /**
+     * Problem 3.1 - Three In One
+     *
+     * Describe how you could use a single array to implement three stacks.
+     * @param <T>
+     */
+    class TripleStackArray<T> {
+        int[] tripleStack;
+        int capacity;
+        int size1, size2, size3;    // Current size of each stack.
+        int stack1, stack2, stack3;                // Start index for each stack.
+        public TripleStackArray(int capacity) {
+            this.capacity = capacity;
+            size1 = 0;
+            size2 = 0;
+            size3 = 0;
+            stack1 = 0;
+            stack2 = 1;
+            stack3 = 2;
+        }
+
+        public void pushOne(int data) {
+            if (!isFull()) {
+                if (size1 == 0) {
+                    rightShiftTwo();
+                } else {
+                    rightShiftOne();
+                }
+                tripleStack[stack1] = data;
+            } else {
+                throw new IllegalStateException("Stack is full.");
+            }
+        }
+
+        public void pushTwo(int data) {
+            if (!isFull()) {
+                if (size2 == 0) {
+                    rightShiftThree();
+                } else {
+                    rightShiftTwo();
+                    stack2--;
+                }
+                tripleStack[stack2] = data;
+            } else {
+                throw new IllegalStateException("Stack is full.");
+            }
+        }
+
+        public void pushThree(int data) {
+            if (!isFull()) {
+                if (size3 == 0) {
+                    tripleStack[stack3] = data;
+                } else {
+                    rightShiftThree();
+                    stack3--;
+                }
+                tripleStack[stack3] = data;
+            } else {
+                throw new IllegalStateException("Stack is full.");
+            }
+        }
+
+        public int popOne() {
+            if (size1 == 0) throw new IllegalStateException("Stack 1 is empty.");
+            int result = tripleStack[0];
+            leftShiftOne();
+            size1--;
+            return result;
+        }
+
+        public int popTwo() {
+            if (size2 == 0) throw new IllegalStateException("Stack 2 is empty.");
+            int result = tripleStack[stack2];
+            leftShiftTwo();
+            size2--;
+            return result;
+        }
+
+        public int popThree() {
+            if (size3 == 0) throw new IllegalStateException("Stack 3 is empty.");
+            int result = tripleStack[stack3];
+            leftShiftThree();
+            size3--;
+            return result;
+        }
+
+        private boolean isFull() {
+            return size1 + size2 + size3 >= capacity;
+        }
+
+        private boolean isEmpty() {
+            return size1 + size2 + size3 == 0;
+        }
+
+        private void rightShiftOne() {
+            if (isFull()) throw new IllegalStateException("Stack is full.");
+            rightShiftTwo();
+            if (size1 == 0) return;
+            int[] stackOne = new int[size1];
+            int j = 0;
+            for (int i = stack1; i < stack1 + size1; i++) {
+                stackOne[j] = tripleStack[i];
+                j++;
+            }
+            j = 0;
+            for (int i = stack1 + 1; i < stack1 + 1 + size1; i++) {
+                tripleStack[i] = stackOne[j];
+            }
+        }
+
+        private void rightShiftTwo() {
+            if (isFull()) throw new IllegalStateException("Stack is full.");
+            rightShiftThree();
+            if (size2 == 0) return;
+            int[] stackTwo = new int[size2];
+            int j = 0;
+            for (int i = stack2; i < stack2 + size2; i++) {
+                stackTwo[j] = tripleStack[i];
+                j++;
+            }
+            j = 0;
+            for (int i = stack2 + 1; i < stack2 + 1 + size2; i++) {
+                tripleStack[i] = stackTwo[j];
+            }
+            stack2++;
+        }
+
+        private void rightShiftThree() {
+            if (isFull()) throw new IllegalStateException("Stack is full.");
+            if (size3 == 0) return;
+            int[] stackThree = new int[size3];
+            int j = 0;
+            for (int i = stack3; i < stack3 + size3; i++) {
+                stackThree[j] = tripleStack[i];
+                j++;
+            }
+            j = 0;
+            for (int i = stack3 + 1; i < stack3 + 1 + size3; i++) {
+                tripleStack[i] = stackThree[j];
+            }
+            stack3++;
+        }
+
+        private void leftShiftOne() {
+            if (size1 == 0) throw new IllegalStateException("Stack 1 is empty.");
+            for (int i = 1; i < size1; i++) {
+                tripleStack[i - 1] = tripleStack[i];
+            }
+            leftShiftTwo();
+        }
+
+        private void leftShiftTwo() {
+            if (stack2 == 0) {
+                throw new IllegalStateException("Stack starts at index" +
+                        "0. Can't shift left!");
+            }
+            if (size2 == 0) return;
+            for (int i = stack2 + 1; i < size2; i++) {
+                tripleStack[i - 1] = tripleStack[i];
+            }
+            leftShiftThree();
+        }
+
+        private void leftShiftThree() {
+            if (stack3 == 0 || stack3 == stack2)
+                throw new IllegalStateException("Stack starts at index" +
+                        " 0. Can't shift left!");
+            if (stack3 == stack2)
+                throw new IllegalStateException("Stack 3 and stack 2 start" +
+                        " at the same index. Can't shift left!");
+            if (size3 == 0) return;
+            for (int i = stack3 + 1; i < size3; i++) {
+                tripleStack[i - 1] = tripleStack[i];
+            }
+        }
+    }
+
+    /**
+     * Problem 3.2 - Stack Min
+     *
+     * How would you design a stack which, in addition to push and pop, has a
+     * function min which returns the minimum element? Push, pop, and min
+     * should all operate in O(1) time.
+     */
+    static class MinStack {
+        Node head;
+        Node minStack;
+
+        void push(int data) {
+            if (head == null) {
+                head = new Node(data);
+                minStack = new Node(data);
+                return;
+            }
+            Node n = new Node(data);
+            n.next = head;
+            head = n;
+            if (minStack != null) {
+                int currentMin = minStack.data;
+                if (data < currentMin) {
+                    Node m = new Node(data);
+                    m.next = minStack;
+                    minStack = m;
+                } else {
+                    Node m = new Node(currentMin);
+                    m.next = minStack;
+                    minStack = m;
+                }
+            } else {
+                minStack = new Node(data);
+            }
+        }
+
+        int pop() {
+            if (head == null) throw new IllegalStateException("Empty stack");
+            int result = head.data;
+            head = head.next;
+            minStack = minStack.next;
+            return result;
+        }
+
+        int min() {
+            return minStack.data;
+        }
+
+        class Node {
+            int data;
+            Node next;
+            Node(int data) {
+                this.data = data;
+                next = null;
+            }
+        }
+    }
+
+    /**
+     * Problem 3.3 - Stack of Plates
+     *
+     * Status: TODO
+     *
+     * Imagine a (literal) stack of plates. If the stack gets too high, it
+     * might topple. Therefore, in real life, we would likely start a new stack
+     * when the previous stack exceeds some threshold. Implement a data
+     * structure StackOfStacks that mimics this. StackOfStacks should be
+     * composed of several stacks and should create a new stack once the
+     * previous one exceeds capacity. StackOfStacks.push() and
+     * StackOfStacks.pop() should behave identically to a single stack (that
+     * is, pop() should return the same values as it would if there were just a
+     * single stack). Implement a function popAt(int index) which performs a
+     * pop operation on a specific sub-stack.
+     */
+    class StackOfStacks {
+
+        Set<Stack> stackOfStacks;
+        int stackCapacity;
+
+        StackOfStacks(int stackCapacity) {
+            this.stackCapacity = stackCapacity;
+        }
+
+        void push(StackNode n) {
+            for (Stack stack : stackOfStacks) {
+
+            }
+        }
+
+        private class StackNode<E> {
+            E data;
+            StackNode next;
+            StackNode(E data) {
+                this.data = data;
+                this.next = null;
+            }
+        }
+
+        private class Stack<T> {
+            StackNode head;
+
+            void push(StackNode n) {
+                if (head == null) {
+                    head = n;
+                    return;
+                }
+                n.next = head;
+                head = n;
+            }
+
+            StackNode pop() {
+                StackNode result = new StackNode(head.data);
+                head = head.next;
+                return result;
+            }
+        }
+
+    }
+
+    /**
+     * Problem 3.4 - Queue Via Stack
+     *
+     * Implement a QueueViaStack class which implements a queue using two
+     * stacks.
+     *
+     * @param <T>
+     */
+    static class QueueViaStack<T> {
+
+        Stack<T> front = new Stack<>();
+        Stack<T> back = new Stack<>();
+
+        void enqueue(T data) {
+            front.push(data);
+        }
+
+        T dequeue() {
+            if (back.isEmpty()) {
+                while (!front.isEmpty()) {
+                    back.push(front.pop());
+                }
+            }
+            return back.pop();
+        }
+    }
+
+
+
 }
 
 class Node<T> {
@@ -566,6 +938,63 @@ class ListNode {
     ListNode(int x) {
         val = x;
         next = null;
+    }
+    ListNode(int[] arr) {
+        val = arr[0];
+        int[] arr2 = new int[arr.length - 1];
+        for (int i = 1; i < arr.length; i++) {
+            add(arr[i]);
+        }
+    }
+    void add(int i) {
+        if (next == null) {
+            next = new ListNode(i);
+            return;
+        }
+        ListNode curNode = next;
+        while (true) {
+            if (curNode.next != null) {
+                curNode = curNode.next;
+            } else {
+                break;
+            }
+        }
+        curNode.next = new ListNode(i);
+    }
+    void createLoopStartingAt(int i) {
+        ListNode curNode = next;
+        while (true) {
+            if (curNode.next != null) {
+                curNode = curNode.next;
+            } else {
+                break;
+            }
+        }
+        ListNode loopNode = next;
+        while (i > 1) {
+            loopNode = loopNode.next;
+            i--;
+        }
+        curNode.next = loopNode;
+    }
+
+    void toConsole() {
+        ListNode curNode = this;
+        int timeOut = 100;
+        while (timeOut > 0) {
+            if (curNode.next != null) {
+                System.out.print(curNode.val + " -> ");
+            } else {
+                System.out.println(curNode.val);
+                break;
+            }
+            curNode = curNode.next;
+            timeOut--;
+        }
+        if (timeOut == 0) {
+            System.out.println(" ... ... ... ");
+            System.out.println("A loop may have been detected.");
+        }
     }
 }
 
