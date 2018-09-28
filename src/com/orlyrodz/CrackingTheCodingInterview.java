@@ -887,8 +887,35 @@ public class CrackingTheCodingInterview {
         }
     }
 
-
-
+    /**
+     * Problem 3.5 - Sort Stack
+     *
+     * Write a program to sort a stack such that the smallest items are on top.
+     * You can use an additional temporary stack, but you may not copy the
+     * elements into any other data structure (such as an array). The stack
+     * supports the following operations: push, pop, peek, and isEmpty.
+     * @param stack
+     * @return
+     */
+    public Stack<Integer> sortStack(Stack stack) {
+        if (stack.isEmpty()) return stack;
+        Stack<Integer> buffer = new Stack<>();
+        int current;
+        while (!stack.isEmpty()) {
+            current = (Integer) stack.pop();
+            if (buffer.isEmpty()) {
+                buffer.push(current);
+            } else {
+                while ((Integer) buffer.peek() <= current) {
+                    stack.push(buffer.pop());
+                }
+                if ((Integer) buffer.peek() > current) {
+                    buffer.push(current);
+                }
+            }
+        }
+        return buffer;
+    }
 }
 
 class Node<T> {
@@ -998,6 +1025,90 @@ class ListNode {
     }
 }
 
+/**
+ * Problem 3.6 - Animal Shelter
+ *
+ * An animal shelter, which holds only dogs and cats, operates on a
+ * strictly "first in, first out" basis. People must adopt either the
+ * oldest (based on arrival time) of all animals at the shelter, or they
+ * can select whether they would prefer a dog or a cat (and will receive
+ * the oldest animal of that type). They cannot select which specific
+ * animal they would like. Create the data structures to maintain this
+ * system and implement operations such as enqueue, dequeueAny, dequeueDog,
+ * and dequeueCat. You may use the built-in LinkedList data structure.
+ */
+class AnimalShelter {
 
+    private int id = 0;
+    private java.util.LinkedList<ShelterEntry<Dog, Integer>> dogs = new java.util.LinkedList<>();
+    private java.util.LinkedList<ShelterEntry<Cat, Integer>> cats = new java.util.LinkedList<>();
 
+    // Methods
+    void enqueue(Animal a) {
+        if (a.getClass() == Dog.class) {
+            ShelterEntry<Dog, Integer> entry = new ShelterEntry(a, idFactory());
+            dogs.add(entry);
+        } else {
+            ShelterEntry<Cat, Integer> entry = new ShelterEntry(a, idFactory());
+            cats.add(entry);
+        }
+    }
 
+    Dog dequeueDog() {
+        if (dogs.isEmpty()) throw new IllegalStateException("No dogs available in shelter.");
+        return dogs.remove().animal;
+    }
+
+    Cat dequeueCat() {
+        if (cats.isEmpty()) throw new IllegalStateException("No cats available in shelter.");
+        return cats.remove().animal;
+    }
+
+    Animal dequeueAny() {
+        if (dogs.isEmpty() && cats.isEmpty()) throw new IllegalStateException("Animal shelter is empty.");
+        if (dogs.isEmpty() && !cats.isEmpty()) return dequeueCat();
+        if (!dogs.isEmpty() && cats.isEmpty()) return dequeueDog();
+
+        if (dogs.getFirst().id < cats.getFirst().id) {
+            return dequeueDog();
+        } else {
+            return dequeueCat();
+        }
+    }
+
+    boolean isEmpty() {
+        return cats.size() + dogs.size() == 0;
+    }
+
+    // Supporting data structures and methods
+    static class Animal {
+        String name;
+        Animal(String name) { this.name = name; }
+    }
+
+    static class Dog extends Animal {
+        Dog(String name) {
+            super(name);
+        }
+    }
+
+    static class Cat extends Animal {
+        Cat(String name) {
+            super(name);
+        }
+    }
+
+    private class ShelterEntry<A, N> {
+        A animal;
+        N id;
+        ShelterEntry(A animal, N id) {
+            this.animal = animal;
+            this.id = id;
+        }
+    }
+
+    private int idFactory() {
+        this.id++;
+        return id;
+    }
+}
